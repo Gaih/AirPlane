@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -30,13 +31,13 @@ public class GameView extends SurfaceView
     private Bitmap hero1;
     private Bitmap hero2;
 
+
+
     private Bitmap erjihuancun;
 
     private WindowManager windowManager;
     private int display_w;
     private int display_h;
-
-    private Plane selectPlane;
 
     private List<iGameImage> gameImages = new ArrayList();
 
@@ -64,7 +65,7 @@ public class GameView extends SurfaceView
         gameImages.add(new Plane(hero2));
     }
 
-
+    private Plane selectPlane;
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
@@ -144,9 +145,7 @@ public class GameView extends SurfaceView
 
     private class Plane implements iGameImage {
 
-        private Bitmap hero1;
-        private Bitmap hero2;
-
+        private Bitmap my;
         private int x;
         private int y;
         private int width;
@@ -156,17 +155,12 @@ public class GameView extends SurfaceView
 
 
         private Plane(Bitmap my) {
-            this.hero1 = my;
+            this.my = my;
 
 //            bitmaps.add(Bitmap.createBitmap(my, 0, 0, my.getWidth() / 4, my.getHeight()));
 //            bitmaps.add(Bitmap.createBitmap(my, (my.getWidth() / 4) * 1, 0, my.getWidth() / 4, my.getHeight()));
 //            bitmaps.add(Bitmap.createBitmap(my, (my.getWidth() / 4) * 2, 0, my.getWidth() / 4, my.getHeight()));
 //            bitmaps.add(Bitmap.createBitmap(my, (my.getWidth() / 4) * 3, 0, my.getWidth() / 4, my.getHeight()));
-
-            bitmaps.add(Bitmap.createBitmap(my, 0, 0, my.getWidth(), my.getHeight()));
-            this.hero2 = my;
-            bitmaps.add(Bitmap.createBitmap(my, 0, 0, my.getWidth(), my.getHeight()));
-
 
             width = my.getWidth();
             height = my.getHeight();
@@ -179,10 +173,13 @@ public class GameView extends SurfaceView
 
         @Override
         public Bitmap getBitmap() {
+            bitmaps.add(hero1);
+            bitmaps.add(hero2);
             Bitmap bitmap = bitmaps.get(index);
 
             if (num == 10) {
                 index++;
+                Log.d("aaaaa",""+bitmaps.size());
                 if (index == bitmaps.size()) {
                     index = 0;
                 }
@@ -200,6 +197,10 @@ public class GameView extends SurfaceView
             return width;
         }
 
+        public boolean select(int x, int y) {
+
+            return false;
+        }
 
         @Override
         public int getX() {
