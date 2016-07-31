@@ -6,7 +6,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -28,6 +27,8 @@ public class GameView extends SurfaceView
     private Bitmap bg;
     private Bitmap diren;
     private Bitmap zidan;
+    private Bitmap hero1;
+    private Bitmap hero2;
 
     private Bitmap erjihuancun;
 
@@ -35,7 +36,9 @@ public class GameView extends SurfaceView
     private int display_w;
     private int display_h;
 
-    private List<GameImage> gameImages = new ArrayList();
+    private Plane selectPlane;
+
+    private List<iGameImage> gameImages = new ArrayList();
 
 
     public GameView(Context context) {
@@ -45,6 +48,9 @@ public class GameView extends SurfaceView
     }
 
     private void init() {
+        hero1 = BitmapFactory.decodeResource(getResources(), R.drawable.hero1);
+        hero2 = BitmapFactory.decodeResource(getResources(), R.drawable.hero2);
+
         my = BitmapFactory.decodeResource(getResources(), R.drawable.my);
         baozha = BitmapFactory.decodeResource(getResources(), R.drawable.baozha);
         zidan = BitmapFactory.decodeResource(getResources(), R.drawable.zidan);
@@ -53,15 +59,17 @@ public class GameView extends SurfaceView
 
         erjihuancun = Bitmap.createBitmap(display_w, display_h, Bitmap.Config.ARGB_8888);
         gameImages.add(new BeijingImage(bg));
-        gameImages.add(new Plane(my));
+        //gameImages.add(new Plane(my));
+        //gameImages.add(new Plane(hero1));
+        gameImages.add(new Plane(hero2));
     }
 
-    private Plane selectPlane;
+
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            for (GameImage game : gameImages) {
+            for (iGameImage game : gameImages) {
                 if (game instanceof Plane) {
                     Plane plane = (Plane) game;
                     if (plane.getX() < event.getX() &&
@@ -89,15 +97,9 @@ public class GameView extends SurfaceView
     }
 
 
-    private interface GameImage {
-        public Bitmap getBitmap();
 
-        public int getX();
 
-        public int getY();
-    }
-
-    private class BeijingImage implements GameImage {
+    private class BeijingImage implements iGameImage {
 
         private Bitmap bg;
         private Bitmap newBitmap = null;
@@ -140,9 +142,11 @@ public class GameView extends SurfaceView
         }
     }
 
-    private class Plane implements GameImage {
+    private class Plane implements iGameImage {
 
-        private Bitmap my;
+        private Bitmap hero1;
+        private Bitmap hero2;
+
         private int x;
         private int y;
         private int width;
@@ -152,15 +156,21 @@ public class GameView extends SurfaceView
 
 
         private Plane(Bitmap my) {
-            this.my = my;
+            this.hero1 = my;
 
-            bitmaps.add(Bitmap.createBitmap(my, 0, 0, my.getWidth() / 4, my.getHeight()));
-            bitmaps.add(Bitmap.createBitmap(my, (my.getWidth() / 4) * 1, 0, my.getWidth() / 4, my.getHeight()));
-            bitmaps.add(Bitmap.createBitmap(my, (my.getWidth() / 4) * 2, 0, my.getWidth() / 4, my.getHeight()));
-            bitmaps.add(Bitmap.createBitmap(my, (my.getWidth() / 4) * 3, 0, my.getWidth() / 4, my.getHeight()));
-            width = my.getWidth() / 4;
+//            bitmaps.add(Bitmap.createBitmap(my, 0, 0, my.getWidth() / 4, my.getHeight()));
+//            bitmaps.add(Bitmap.createBitmap(my, (my.getWidth() / 4) * 1, 0, my.getWidth() / 4, my.getHeight()));
+//            bitmaps.add(Bitmap.createBitmap(my, (my.getWidth() / 4) * 2, 0, my.getWidth() / 4, my.getHeight()));
+//            bitmaps.add(Bitmap.createBitmap(my, (my.getWidth() / 4) * 3, 0, my.getWidth() / 4, my.getHeight()));
+
+            bitmaps.add(Bitmap.createBitmap(my, 0, 0, my.getWidth(), my.getHeight()));
+            this.hero2 = my;
+            bitmaps.add(Bitmap.createBitmap(my, 0, 0, my.getWidth(), my.getHeight()));
+
+
+            width = my.getWidth();
             height = my.getHeight();
-            x = (display_w - my.getWidth() / 4) / 2;
+            x = (display_w - my.getWidth()) / 2;
             y = display_h - my.getHeight() - 30;
         }
 
@@ -190,10 +200,6 @@ public class GameView extends SurfaceView
             return width;
         }
 
-        public boolean select(int x, int y) {
-
-            return false;
-        }
 
         @Override
         public int getX() {
@@ -224,7 +230,7 @@ public class GameView extends SurfaceView
             while (state) {
 
                 Canvas newCanvas = new Canvas(erjihuancun);
-                for (GameImage image : gameImages) {
+                for (iGameImage image : gameImages) {
                     newCanvas.drawBitmap(image.getBitmap(), image.getX(), image.getY(), p1);
                 }
                 Canvas canvas = holder.lockCanvas();
