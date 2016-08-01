@@ -7,6 +7,8 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -34,7 +36,6 @@ public class GameView extends SurfaceView
     private Bitmap hero2;
 
 
-
     private Bitmap erjihuancun;
 
     private WindowManager windowManager;
@@ -50,27 +51,41 @@ public class GameView extends SurfaceView
         getHolder().addCallback(this);
         this.setOnTouchListener(this);
     }
-//子弹
-    public class Zidan implements iGameImage{
+
+    private class SoundPlay extends Thread {
+        int i = 0;
+
+        public SoundPlay(int i) {
+            this.i = i;
+        }
+
+        @Override
+        public void run() {
+            pool.play(i, 1, 1, 1, 0, 1);
+        }
+    }
+
+    //子弹
+    public class Zidan implements iGameImage {
         private Bitmap zidan;
         private Plane plane;
         private int x;
         private int y;
 
 
-        public Zidan(Plane plane,Bitmap zidan){
+        public Zidan(Plane plane, Bitmap zidan) {
             this.zidan = zidan;
             this.plane = plane;
-            x=(plane.getX()+plane.getWidth()/2-8);
-            y=(plane.getY()-zidan.getHeight());
+            x = (plane.getX() + plane.getWidth() / 2 - 8);
+            y = (plane.getY() - zidan.getHeight());
 
 
         }
 
         @Override
         public Bitmap getBitmap() {
-            y-=30;
-            if (y<=-10){
+            y -= 30;
+            if (y <= -10) {
                 zidans.remove(this);
             }
             return zidan;
@@ -87,6 +102,12 @@ public class GameView extends SurfaceView
         }
     }
 
+    private SoundPool pool;
+    private int sound_bomb = 0;
+    private int sound_gameover = 0;
+    private int sound_shot = 0;
+
+
     private void init() {
         hero1 = BitmapFactory.decodeResource(getResources(), R.drawable.hero1);
         hero2 = BitmapFactory.decodeResource(getResources(), R.drawable.hero2);
@@ -102,7 +123,14 @@ public class GameView extends SurfaceView
         gameImages.add(new Plane(my));
 //        gameImages.add(new Plane(hero1));
 //        gameImages.add(new Plane(hero2));
-        gameImages.add(new DijiImage(army,baozha));
+        gameImages.add(new DijiImage(army, baozha));
+
+        pool = new SoundPool(10, AudioManager.STREAM_SYSTEM, 0);
+
+        sound_bomb = pool.load(getContext(), R.raw.bomb, 1);
+        sound_gameover = pool.load(getContext(), R.raw.gameover, 1);
+        sound_shot = pool.load(getContext(), R.raw.shot, 1);
+
     }
 
     private Plane selectPlane;
@@ -126,21 +154,20 @@ public class GameView extends SurfaceView
                     break;
                 }
             }
-        }else if (event.getAction() == MotionEvent.ACTION_MOVE){
+        } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
 
-            if (selectPlane !=null){
-                selectPlane.setX((int)event.getX()-selectPlane.getWidth()/2);
-                selectPlane.setY((int)event.getY()-selectPlane.getHeight()/2);
+            if (selectPlane != null) {
+                selectPlane.setX((int) event.getX() - selectPlane.getWidth() / 2);
+                selectPlane.setY((int) event.getY() - selectPlane.getHeight() / 2);
             }
-        }else if (event.getAction() == MotionEvent.ACTION_UP){
+        } else if (event.getAction() == MotionEvent.ACTION_UP) {
             selectPlane = null;
         }
         return true;
     }
 
 
-
-//背景
+    //背景
     private class BeijingImage implements iGameImage {
 
         private Bitmap bg;
@@ -221,7 +248,7 @@ public class GameView extends SurfaceView
             if (num == 10) {
                 index++;
                 if (index == bitmaps.size()) {
-                    Log.d("aaaa",""+bitmaps.size());
+                    Log.d("aaaa", "" + bitmaps.size());
                     index = 0;
                 }
                 num = 0;
@@ -261,8 +288,9 @@ public class GameView extends SurfaceView
             this.y = y;
         }
     }
+
     //敌机
-    private class DijiImage implements  iGameImage{
+    private class DijiImage implements iGameImage {
 
         private Bitmap diren = null;
         private List<Bitmap> bitmaps = new ArrayList<Bitmap>();
@@ -273,54 +301,53 @@ public class GameView extends SurfaceView
         private int width;
         private int height;
 
-        public DijiImage(Bitmap diren,Bitmap baozha){
+        public DijiImage(Bitmap diren, Bitmap baozha) {
             this.diren = diren;
-            bitmaps.add(Bitmap.createBitmap(diren,0,0,diren.getWidth()/4,diren.getHeight()));
-            bitmaps.add(Bitmap.createBitmap(diren,(diren.getWidth()/4)*1,0,diren.getWidth()/4,diren.getHeight()));
-            bitmaps.add(Bitmap.createBitmap(diren,(diren.getWidth()/4)*2,0,diren.getWidth()/4,diren.getHeight()));
-            bitmaps.add(Bitmap.createBitmap(diren,(diren.getWidth()/4)*3,0,diren.getWidth()/4,diren.getHeight()));
+            bitmaps.add(Bitmap.createBitmap(diren, 0, 0, diren.getWidth() / 4, diren.getHeight()));
+            bitmaps.add(Bitmap.createBitmap(diren, (diren.getWidth() / 4) * 1, 0, diren.getWidth() / 4, diren.getHeight()));
+            bitmaps.add(Bitmap.createBitmap(diren, (diren.getWidth() / 4) * 2, 0, diren.getWidth() / 4, diren.getHeight()));
+            bitmaps.add(Bitmap.createBitmap(diren, (diren.getWidth() / 4) * 3, 0, diren.getWidth() / 4, diren.getHeight()));
 
-            baozhas.add(Bitmap.createBitmap(baozha,0,0,baozha.getWidth()/4,baozha.getHeight()/2));
-            baozhas.add(Bitmap.createBitmap(baozha,(baozha.getWidth()/4)*1,0,baozha.getWidth()/4,baozha.getHeight()/2));
-            baozhas.add(Bitmap.createBitmap(baozha,(baozha.getWidth()/4)*2,0,baozha.getWidth()/4,baozha.getHeight()/2));
-            baozhas.add(Bitmap.createBitmap(baozha,(baozha.getWidth()/4)*3,0,baozha.getWidth()/4,baozha.getHeight()/2));
+            baozhas.add(Bitmap.createBitmap(baozha, 0, 0, baozha.getWidth() / 4, baozha.getHeight() / 2));
+            baozhas.add(Bitmap.createBitmap(baozha, (baozha.getWidth() / 4) * 1, 0, baozha.getWidth() / 4, baozha.getHeight() / 2));
+            baozhas.add(Bitmap.createBitmap(baozha, (baozha.getWidth() / 4) * 2, 0, baozha.getWidth() / 4, baozha.getHeight() / 2));
+            baozhas.add(Bitmap.createBitmap(baozha, (baozha.getWidth() / 4) * 3, 0, baozha.getWidth() / 4, baozha.getHeight() / 2));
 
-            baozhas.add(Bitmap.createBitmap(baozha,0,baozha.getHeight()/2,baozha.getWidth()/4,baozha.getHeight()/2));
-            baozhas.add(Bitmap.createBitmap(baozha,(baozha.getWidth()/4)*1,baozha.getHeight()/2,baozha.getWidth()/4,baozha.getHeight()/2));
-            baozhas.add(Bitmap.createBitmap(baozha,(baozha.getWidth()/4)*2,baozha.getHeight()/2,baozha.getWidth()/4,baozha.getHeight()/2));
-            baozhas.add(Bitmap.createBitmap(baozha,(baozha.getWidth()/4)*3,baozha.getHeight()/2,baozha.getWidth()/4,baozha.getHeight()/2));
-
-
+            baozhas.add(Bitmap.createBitmap(baozha, 0, baozha.getHeight() / 2, baozha.getWidth() / 4, baozha.getHeight() / 2));
+            baozhas.add(Bitmap.createBitmap(baozha, (baozha.getWidth() / 4) * 1, baozha.getHeight() / 2, baozha.getWidth() / 4, baozha.getHeight() / 2));
+            baozhas.add(Bitmap.createBitmap(baozha, (baozha.getWidth() / 4) * 2, baozha.getHeight() / 2, baozha.getWidth() / 4, baozha.getHeight() / 2));
+            baozhas.add(Bitmap.createBitmap(baozha, (baozha.getWidth() / 4) * 3, baozha.getHeight() / 2, baozha.getWidth() / 4, baozha.getHeight() / 2));
 
 
-            width = diren.getWidth()/4;
+            width = diren.getWidth() / 4;
             height = diren.getHeight();
 
-            y= -diren.getHeight();
+            y = -diren.getHeight();
             Random random = new Random();
-            x=random.nextInt(display_w - (diren.getWidth()/4));
+            x = random.nextInt(display_w - (diren.getWidth() / 4));
 
 
         }
 
         private int index = 0;
         private int num = 0;
+
         @Override
         public Bitmap getBitmap() {
             Bitmap bitmap = bitmaps.get(index);
-            if (num ==10){
+            if (num == 10) {
                 index++;
-                if (index==8&&dead){
+                if (index == 8 && dead) {
                     gameImages.remove(this);
                 }
-                if (index == bitmaps.size()){
+                if (index == bitmaps.size()) {
                     index = 0;
                 }
                 num = 0;
             }
-            y+=dijishu;
+            y += dijishu;
             num++;
-            if (y>display_h){
+            if (y > display_h) {
                 gameImages.remove(this);
             }
             return bitmap;
@@ -328,22 +355,25 @@ public class GameView extends SurfaceView
 
         private boolean dead = false;
 
-        public void attack(ArrayList<Zidan> zidans){
-            if (!dead){
-                for (iGameImage zidan : (List<iGameImage>)zidans.clone()){
+        public void attack(ArrayList<Zidan> zidans) {
+            if (!dead) {
+                for (iGameImage zidan : (List<iGameImage>) zidans.clone()) {
 
-                    if (zidan.getX()>x&&zidan.getY()>y&&
-                            zidan.getX()<width+x&&zidan.getY()<y+height){
+                    if (zidan.getX() > x && zidan.getY() > y &&
+                            zidan.getX() < width + x && zidan.getY() < y + height) {
                         zidans.remove(zidan);
                         dead = true;
                         bitmaps = baozhas;
-                        fenshu+=10;
+                        fenshu += 10;
+                        new SoundPlay(sound_bomb).start();
+
                         break;
                     }
                 }
             }
 
         }
+
         @Override
         public int getX() {
             return x;
@@ -372,6 +402,7 @@ public class GameView extends SurfaceView
         thread.start();
 
     }
+
     Thread thread = null;
 
     @Override
@@ -391,25 +422,26 @@ public class GameView extends SurfaceView
     private int xiayiguan = 100;
 
 
-
-    private int[][]sj ={{1,100,30,2},
-            {2,200,30,3},
-            {3,300,25,3},
-            {4,400,20,4},
-            {5,500,20,5},
-            {6,600,15,5},
-            {7,700,10,6},
-            {8,800,10,7},
-            {9,900,10,8},
-            {10,1000,10,9},
+    private int[][] sj = {{1, 100, 30, 2},
+            {2, 200, 30, 3},
+            {3, 300, 25, 3},
+            {4, 400, 20, 4},
+            {5, 500, 20, 5},
+            {6, 600, 15, 5},
+            {7, 700, 10, 6},
+            {8, 800, 10, 7},
+            {9, 900, 10, 8},
+            {10, 1000, 10, 9},
 
     };
 
     private boolean stopState = false;
-    public void stop(){
+
+    public void stop() {
         stopState = true;
     }
-    public void start(){
+
+    public void start() {
         stopState = false;
         thread.interrupt();
     }
@@ -426,46 +458,47 @@ public class GameView extends SurfaceView
         p2.setAntiAlias(true);
         try {
             while (state) {
-                while (stopState){
+                while (stopState) {
                     try {
                         thread.sleep(100000);
-                    }catch (Exception e){
+                    } catch (Exception e) {
 
                     }
                 }
-                if (selectPlane !=null){
-                    if (zidan_num ==5){
-                        zidans.add(new Zidan(selectPlane,zidan));
-                        zidan_num=0;
+                if (selectPlane != null) {
+                    if (zidan_num == 5) {
+                        new SoundPlay(sound_shot).start();
+                        zidans.add(new Zidan(selectPlane, zidan));
+                        zidan_num = 0;
                     }
                     zidan_num++;
                 }
                 Canvas newCanvas = new Canvas(erjihuancun);
-                for (iGameImage image : (List<iGameImage>)gameImages.clone()) {
-                    if (image instanceof  DijiImage){
-                        ((DijiImage)image).attack(zidans);
+                for (iGameImage image : (List<iGameImage>) gameImages.clone()) {
+                    if (image instanceof DijiImage) {
+                        ((DijiImage) image).attack(zidans);
                     }
                     newCanvas.drawBitmap(image.getBitmap(), image.getX(), image.getY(), p1);
                 }
-                for (iGameImage image : (List<iGameImage>)zidans.clone()){
+                for (iGameImage image : (List<iGameImage>) zidans.clone()) {
                     newCanvas.drawBitmap(image.getBitmap(), image.getX(), image.getY(), p1);
                 }
 
-                newCanvas.drawText("分数："+fenshu,0,50,p2);
-                newCanvas.drawText("关卡："+guanka,0,100,p2);
-                newCanvas.drawText("下一关："+xiayiguan,0,150,p2);
+                newCanvas.drawText("分数：" + fenshu, 0, 50, p2);
+                newCanvas.drawText("关卡：" + guanka, 0, 100, p2);
+                newCanvas.drawText("下一关：" + xiayiguan, 0, 150, p2);
 
-                if (sj[guanka-1][1]<=fenshu){
+                if (sj[guanka - 1][1] <= fenshu) {
                     chudishu = sj[guanka][2];
                     dijishu = sj[guanka][3];
-                    fenshu = sj[guanka-1][1]-fenshu;
+                    fenshu = sj[guanka - 1][1] - fenshu;
                     xiayiguan = sj[guanka][1];
                     guanka = sj[guanka][0];
                 }
 
-                if (army_num ==chudishu){
+                if (army_num == chudishu) {
                     army_num = 0;
-                    gameImages.add(new DijiImage(army,baozha));
+                    gameImages.add(new DijiImage(army, baozha));
                 }
                 army_num++;
                 Canvas canvas = holder.lockCanvas();

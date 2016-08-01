@@ -19,6 +19,8 @@ public class MainActivity extends AppCompatActivity implements DialogInterface.O
         getSupportActionBar().hide();
         view = new GameView(this);
         setContentView(view);
+
+
     }
 
     @Override
